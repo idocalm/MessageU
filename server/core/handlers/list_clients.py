@@ -5,6 +5,7 @@ from protocol.framing import ResponseFrame
 class ListClientsHandler(AbstractRequestHandler):
     def handle(self, request):
         clients = self.db.get_all_clients()
+        print(clients)
 
         payload_parts = []
         for client in clients: 
@@ -13,10 +14,10 @@ class ListClientsHandler(AbstractRequestHandler):
                 continue
 
             # TODO: Understand this ->
-            name_bytes = client.name.encode('ascii', errors='ignore')
+            name_bytes = client.username.encode('ascii', errors='ignore')
             if len(name_bytes) > 254:
                 name_bytes = name_bytes[:254]
-            name_field = name_bytes + b'\x00' + b'\x00' * (255 - len(name_bytes))
+            name_field = name_bytes + b'\x00' * (255 - len(name_bytes))
             payload_parts.append(client.id + name_field)
 
         payload = b''.join(payload_parts)

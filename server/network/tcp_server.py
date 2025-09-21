@@ -11,9 +11,7 @@ class TCPServer:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
         s.bind(("0.0.0.0", self.port))
         s.listen(5)
-
-        print(f"Server listening on port {self.port}")
-
+        
         while True:
             conn, addr = s.accept()
             print(f"Accepted connection from {addr}")

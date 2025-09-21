@@ -5,6 +5,7 @@ from core.handlers.get_pubkey import GetPubKeyHandler
 from core.handlers.send_message import SendMessageHandler
 from core.handlers.pull_messages import PullMessagesHandler
 from protocol.framing import ResponseFrame
+from debugger import print_request_debug, print_response_debug
 
 class Dispatcher:
     def __init__(self, db):
@@ -18,11 +19,18 @@ class Dispatcher:
         }
 
     def dispatch(self, request):
+
+        print_request_debug(request)
+
         handler = self.handlers.get(request.code)
         if not handler: 
-            return ResponseFrame(version=request.version, code=ResponseCode.ERROR, payload=b"Unknown request code")
+            resp = ResponseFrame(version=request.version, code=ResponseCode.ERROR, payload=b"Unknown request code")
+            print_response_debug(resp)
         try: 
-            return handler.handle(request)
+            resp = handler.handle(request)
+            print_response_debug(resp)
+            return resp
         except Exception as e:
-            return ResponseFrame(version=request.version, code=ResponseCode.ERROR, payload=str(e).encode())
-        
+            resp = ResponseFrame(version=request.version, code=ResponseCode.ERROR, payload=str(e).encode())
+            print_response_debug(resp)
+            return resp

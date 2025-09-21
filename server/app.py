@@ -1,10 +1,18 @@
 from config import Config
+from core.db import Database
+from core.dispatcher import Dispatcher
+from network.tcp_server import TCPServer
 
 def main():
     cfg = Config()
-    print(f"Starting application on port {cfg.port} with version {cfg.version}")
 
+    db = Database("app.db")
+
+    dispatcher = Dispatcher(db)
+    server = TCPServer(cfg.port, dispatcher)
     
+    print(f"[+] Server v{cfg.version} listening on port {cfg.port}")
+    server.start()
 
 if __name__ == "__main__":
     main()

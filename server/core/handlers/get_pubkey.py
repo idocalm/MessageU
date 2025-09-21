@@ -16,4 +16,3 @@ class GetPubKeyHandler(AbstractRequestHandler):
         
         response = client_id + pubkey
         return ResponseFrame(version=request.version, code=ResponseCode.GET_PUBKEY, payload=response)
-    
