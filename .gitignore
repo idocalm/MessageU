@@ -1,0 +1,14 @@
+# Byte-compiled / cache files
+__pycache__/
+*.pyc
+
+# Object files
+*.o
+
+# VSCode
+.vscode/
+client/.vscode/
+server/.vscode/
+
+# Databases
+*.db

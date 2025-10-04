@@ -11,9 +11,9 @@ class ResponseCode(IntEnum):
     REGISTER_OK = 2100
     LIST_CLIENTS = 2101
     GET_PUBKEY = 2102
-    SEND_OK = 2103
+    SEND_OK = 2103 # Server received the message
     PULL_MESSAGES = 2104
-    ERROR = 2400
+    ERROR = 9000 # General error
 
 class MessageType(IntEnum):
     SYM_REQ = 1 

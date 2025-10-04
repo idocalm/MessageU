@@ -8,8 +8,9 @@ from protocol.framing import ResponseFrame
 from debugger import print_request_debug, print_response_debug
 
 class Dispatcher:
-    def __init__(self, db):
+    def __init__(self, db, debug=False):
         self.db = db
+        self.debug = debug
         self.handlers = {
             RequestCode.REGISTER: RegisterHandler(db),
             RequestCode.LIST_CLIENTS: ListClientsHandler(db),
@@ -19,18 +20,22 @@ class Dispatcher:
         }
 
     def dispatch(self, request):
-
-        print_request_debug(request)
+        
+        if self.debug:
+            print_request_debug(request)
 
         handler = self.handlers.get(request.code)
         if not handler: 
             resp = ResponseFrame(version=request.version, code=ResponseCode.ERROR, payload=b"Unknown request code")
-            print_response_debug(resp)
+            if self.debug:
+                print_response_debug(resp)
         try: 
             resp = handler.handle(request)
-            print_response_debug(resp)
+            if self.debug:
+                print_response_debug(resp)
             return resp
         except Exception as e:
             resp = ResponseFrame(version=request.version, code=ResponseCode.ERROR, payload=str(e).encode())
-            print_response_debug(resp)
+            if self.debug:
+                print_response_debug(resp)
             return resp

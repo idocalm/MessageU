@@ -1,13 +1,24 @@
+#ifndef TCP_CLIENT_H
+#define TCP_CLIENT_H
+
 #include <boost/asio.hpp>
+#include <protocol/constants.h>
 #include <vector>
 #include <string>
+#include <iostream>
+#include <fstream>
+
+#define CLIENT_CONFIG "server.info"
 
 class TCPClient {
     public: 
-        TCPClient(const std::string& host, uint16_t port);
+        TCPClient();
 
         void connect();
         void send(const std::vector<uint8_t>& data);
+
+        // get exactly n bytes
+        std::vector<uint8_t> receive_n(size_t n);
         std::vector<uint8_t> receive(); 
 
     private:
@@ -15,5 +26,6 @@ class TCPClient {
         uint16_t port_;
         boost::asio::io_context io_context_;
         boost::asio::ip::tcp::socket socket_;
-
 };
+
+#endif

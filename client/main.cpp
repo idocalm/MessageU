@@ -1,16 +1,14 @@
 #include "core/client.h"
 #include <iostream>
+#include "menu.h"
 
 int main() {
     try {
-        Client client("127.0.0.1", 1357);
-
-        std::vector<uint8_t> pubkey(160, 'A'); // Dummy public key
-        client.register_user("testuser", pubkey);
-
-        client.list_clients();
+        Client client; 
+        Menu menu(client);
+        menu.run();
     } catch (const std::exception& e) {
-        std::cerr << "Exception: " << e.what() << std::endl;
+        std::cerr << Color::RED << "Error: " << e.what() << "; Please check " << CLIENT_CONFIG << " is correct and server is up" << Color::RESET << std::endl;
     }
 
     return 0;

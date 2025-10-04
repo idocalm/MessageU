@@ -1,3 +1,6 @@
+#ifndef CODES_H
+#define CODES_H
+
 #include <cstdint>
 
 enum class RequestCode : uint16_t {
@@ -24,3 +27,4 @@ enum class MessageType : uint16_t {
     FILE = 4,
 };
 
+#endif

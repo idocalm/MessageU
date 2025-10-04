@@ -1,10 +1,14 @@
+#ifndef FRAMING_H
+#define FRAMING_H
+
+#include "protocol/constants.h"
 #include <cstdint>
 #include <vector>
 #include <string>
 #include <cstring>
 
 struct RequestFrame {
-    std::array<uint8_t, 16> client_id;
+    std::array<uint8_t, Protocol::client_id_len> client_id;
     uint8_t version;
     uint16_t code;
     std::vector<uint8_t> payload;
@@ -19,20 +23,11 @@ struct RequestFrame {
 
     std::vector<uint8_t> to_bytes() const {
         std::vector<uint8_t> buf; 
-        buf.resize(16 + 1 + 2 + 4 + payload.size());
-        size_t offset = 0;
-        memcpy(buf.data() + offset, client_id.data(), 16);
-        offset += 16;
-        buf[offset++] = version;
-        *reinterpret_cast<uint16_t*>(buf.data() + offset) = code; 
-        offset += 2;
-        *reinterpret_cast<uint32_t*>(buf.data() + offset) = payload.size();
-        offset += 4;
-
-        if (!payload.empty()) {
-            memcpy(buf.data() + offset, payload.data(), payload.size());
-        }
-
+        buf.insert(buf.end(), client_id.begin(), client_id.end());
+        buf.push_back(version);
+        put_le16(buf, code);
+        put_le32(buf, static_cast<uint32_t>(payload.size()));
+        buf.insert(buf.end(), payload.begin(), payload.end());
         return buf;
     }
 
@@ -45,18 +40,17 @@ struct ResponseFrame {
 
     static ResponseFrame from_bytes(const std::vector<uint8_t> &buf) {
         ResponseFrame frame; 
-        if (buf.size() < 1 + 2 + 4) {
+        if (buf.size() < Protocol::header_len_resp) {
             throw std::runtime_error("Response buffer too small");
         }
 
         size_t offset = 0;
         frame.version = buf[offset++];
-        
-        frame.code = *reinterpret_cast<const uint16_t*>(buf.data() + offset);
-        offset += 2;
+        frame.code = read_le16(&buf[offset]);
+        offset += Protocol::code_len;
 
-        uint32_t payload_size = *reinterpret_cast<const uint32_t*>(buf.data() + offset);
-        offset += 4;
+        uint32_t payload_size =  read_le32(&buf[offset]);
+        offset += Protocol::payload_size_len;
 
         if (buf.size() < offset + payload_size) {
             throw std::runtime_error("Response buffer too small for payload");
@@ -68,3 +62,4 @@ struct ResponseFrame {
     }
 };
 
+#endif

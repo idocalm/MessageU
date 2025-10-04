@@ -2,11 +2,13 @@ import os
 
 FALLBACK_PORT = 1357
 PORT_INFO_FILE = "myport.info"
+DEBUG = True
 
 class Config: 
     def __init__(self):
         self.port = FALLBACK_PORT
         self.version = 2
+        self.debug = DEBUG
 
         if os.path.exists(PORT_INFO_FILE):
             try:

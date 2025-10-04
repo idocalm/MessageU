@@ -21,9 +21,10 @@ class RegisterHandler(AbstractRequestHandler):
                 return ResponseFrame(version=request.version, code=ResponseCode.ERROR, payload=b"Username already exists")
             
             client_id = self.db.add_client(username, pubkey)
-            return ResponseFrame(version=request.version, code=ResponseCode.OK, payload=client_id)
+            return ResponseFrame(version=request.version, code=ResponseCode.REGISTER_OK, payload=client_id)
         
         except sqlite3.IntegrityError:
             return ResponseFrame(version=request.version, code=ResponseCode.ERROR, payload=b"Username already exists")
         except Exception as e:
+            print(f"Error in RegisterHandler: {e}")
             return ResponseFrame(version=request.version, code=ResponseCode.ERROR, payload=str(e).encode())
