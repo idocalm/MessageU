@@ -8,8 +8,6 @@
 #include <iostream>
 #include <fstream>
 
-#define CLIENT_CONFIG "server.info"
-
 class TCPClient {
     public: 
         TCPClient();

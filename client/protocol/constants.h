@@ -1,6 +1,10 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
+#define CLIENT_FILE "me.info"
+#define CLIENT_CONFIG "server.info"
+#include <iomanip>
+
 namespace Protocol {
     const int version = 2;
 
@@ -42,5 +46,25 @@ inline void put_le32(std::vector<uint8_t>& b, uint32_t v) {
     b.push_back(uint8_t((v >> 16) & 0xFF));
     b.push_back(uint8_t((v >> 24) & 0xFF));
 }
+
+inline std::vector<uint8_t> hex_to_bytes(const std::string& hex) {
+    std::vector<uint8_t> bytes;
+    bytes.reserve(hex.size() / 2);
+    for (size_t i = 0; i < hex.size(); i += 2) {
+        std::string byte_str = hex.substr(i, 2);
+        uint8_t byte = std::stoul(byte_str, nullptr, 16);
+        bytes.push_back(byte);
+    }
+    return bytes;
+}
+
+inline std::string to_hex(const std::vector<uint8_t>& data) {
+    std::ostringstream oss;
+    oss << std::hex << std::setfill('0');
+    for (uint8_t b : data)
+        oss << std::setw(2) << static_cast<int>(b);
+    return oss.str();
+}
+
 
 #endif

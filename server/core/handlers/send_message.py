@@ -23,15 +23,18 @@ class SendMessageHandler(AbstractRequestHandler):
 
         content = p[SIZE:SIZE + content_size]
 
-        if self.storage.get_pubkey(to_id) is None:
+        if self.db.get_pubkey(to_id) is None:
             return ResponseFrame(request.version, ResponseCode.ERROR, b"dest not found")
 
         from_id = request.client_id
 
+        if from_id == to_id:
+            return ResponseFrame(request.version, ResponseCode.ERROR, b"can't send message to yourself")
+
         try:
-            self.storage.add_message(to_id, from_id, int(msg_type), content)
+            self.db.add_message(to_id, from_id, int(msg_type), content)
             # Update last seen for sender
-            self.storage.update_last_seen(from_id)
+            self.db.update_last_seen(from_id)
             return ResponseFrame(request.version, ResponseCode.SEND_OK, b"")
         except Exception as e:
             return ResponseFrame(request.version, ResponseCode.ERROR, str(e).encode())

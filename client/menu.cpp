@@ -19,25 +19,14 @@ void Menu::print_menu() {
 void Menu::build_handlers() {
     handlers_ = {
         {110, [this] {
-
-            // TODO: Check if file my.info exists and if so, don't allow. 
-
-            std::string name;
-            std::cout << "Enter username: ";
-            std::getline(std::cin, name);
-
-            RSAPrivateWrapper privateKey;
-            std::string privkey = privateKey.getPrivateKey();
-            std::string pubkey = privateKey.getPublicKey();
-
-            client_.register_user(name, pubkey, privkey);
+            client_.register_user();
         }},
         {120, [this] { client_.list_clients(); }},
-        {130, [this] { /* future action */ }},
-        {140, [this] { /* ... */ }},
-        {150, [this] { /* ... */ }},
-        {151, [this] { /* ... */ }},
-        {152, [this] { /* ... */ }},
+        {130, [this] { client_.get_pubkey(); }},
+        {140, [this] { client_.pull_messages(); }},
+        {150, [this] { client_.send_mesage_to_client(); }},
+        {151, [this] { client_.request_sym_key(); }},
+        {152, [this] { client_.send_sym_key(); }},
         {0,   [this] {
             std::cout << Color::YELLOW << "Goodbye!" << Color::RESET << std::endl;
         }},
@@ -72,5 +61,6 @@ void Menu::run() {
         if (line.empty()) continue;
         choice = std::stoi(line);
         handle_choice(choice);
+        std::cout << std::endl;
     } while (choice != 0);
 }

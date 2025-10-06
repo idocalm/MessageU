@@ -60,6 +60,35 @@ struct ResponseFrame {
 
         return frame;
     }
+
+    void debug() const {
+        std::cout << "=== ResponseFrame Debug ===\n";
+        std::cout << "Version: " << static_cast<int>(version) << "\n";
+        std::cout << "Code: 0x" << std::hex << std::setw(4) << std::setfill('0') << code << std::dec << "\n";
+        std::cout << "Payload size: " << payload.size() << " bytes\n";
+
+        std::cout << "Payload (hex): ";
+        for (uint8_t b : payload)
+            std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(b);
+        std::cout << std::dec << "\n";
+        std::cout << "===========================\n";
+    }
+};
+
+struct MessagePayload {
+    std::array<uint8_t, Protocol::client_id_len> dest_id;
+    uint8_t type;
+    uint32_t content_size;
+    std::vector<uint8_t> content;
+
+    std::vector<uint8_t> to_bytes() const {
+        std::vector<uint8_t> buf;
+        buf.insert(buf.end(), dest_id.begin(), dest_id.end());
+        buf.push_back(type);
+        put_le32(buf, content_size);
+        buf.insert(buf.end(), content.begin(), content.end());
+        return buf;
+    }
 };
 
 #endif

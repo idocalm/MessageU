@@ -68,7 +68,7 @@ class Database:
         row = cur.fetchone()
         return row["PublicKey"] if row else None
     
-    def upade_last_seen(self, client_id):
+    def update_last_seen(self, client_id):
         cur = self.conn.cursor()
         cur.execute("UPDATE clients SET LastSeen = ? WHERE ID = ?", (self._now(), client_id))
         self.conn.commit()

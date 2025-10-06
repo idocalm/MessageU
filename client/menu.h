@@ -8,7 +8,6 @@
 #include <unordered_set>
 #include <functional>
 
-#include "crypto/RSAWrapper.h"
 #include "core/client.h"
 
 using Handler = std::function<void()>;
