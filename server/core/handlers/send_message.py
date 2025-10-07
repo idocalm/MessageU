@@ -1,19 +1,19 @@
 import struct
-from core.handlers.base import AbstractRequestHandler
-from protocol.codes import ResponseCode, MessageType
+from core.handlers.base import RequestHandler
+from protocol.codes import ResponseCode, MessageType, Protocol
 from protocol.framing import ResponseFrame
 
-SIZE = 16 + 1 + 4  # ToClient(16) + Type(1) + ContentSize(4)
+SIZE = Protocol.CLIENT_ID_LEN + Protocol.TYPE_LEN + Protocol.MAX_MESSAGE_CONTENT_SIZE
 
-class SendMessageHandler(AbstractRequestHandler):
+class SendMessageHandler(RequestHandler):
     def handle(self, request):
         p = request.payload
         if len(p) < SIZE:
             return ResponseFrame(request.version, ResponseCode.ERROR, b"invalid payload")
 
-        to_id = p[:16]
-        msg_type = p[16]
-        (content_size,) = struct.unpack_from("<I", p, 17)
+        to_id = p[:Protocol.CLIENT_ID_LEN]
+        msg_type = p[Protocol.CLIENT_ID_LEN]
+        (content_size,) = struct.unpack_from("<I", p, Protocol.CLIENT_ID_LEN + 1)
 
         if len(p) != SIZE + content_size:
             return ResponseFrame(request.version, ResponseCode.ERROR, b"size mismatch")

@@ -1,7 +1,8 @@
 from protocol.framing import RequestFrame, ResponseFrame
+from core.dispatcher import Dispatcher
 
 class Connection:
-    def __init__(self, sock, dispatcher):
+    def __init__(self, sock, dispatcher: Dispatcher):
         self.sock = sock
         self.dispatcher = dispatcher
 

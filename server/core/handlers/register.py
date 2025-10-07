@@ -1,19 +1,20 @@
-from core.handlers.base import AbstractRequestHandler
-from protocol.codes import ResponseCode
+from core.handlers.base import RequestHandler
+from protocol.codes import ResponseCode, Protocol
 from protocol.framing import ResponseFrame
 import sqlite3
 
-class RegisterHandler(AbstractRequestHandler):
+class RegisterHandler(RequestHandler):
     def handle(self, request):
         payload = request.payload
 
         # Payload contains 
-        if len(payload) < 255 + 160:
+        if len(payload) < Protocol.MAX_USERNAME_LEN + Protocol.MAX_PUBKEY_LEN:
             return ResponseFrame(version=request.version, code=ResponseCode.ERROR, payload=b"Invalid payload size")
         
-        raw_name = payload[:255]
+        raw_name = payload[:Protocol.MAX_USERNAME_LEN]
         username = raw_name.split(b'\x00', 1)[0].decode('ascii', errors='ignore')
-        pubkey = payload[255:255+160]
+        
+        pubkey = payload[Protocol.MAX_USERNAME_LEN:Protocol.MAX_USERNAME_LEN+Protocol.MAX_PUBKEY_LEN]
 
         try:
             existing = self.db.get_client_by_name(username)

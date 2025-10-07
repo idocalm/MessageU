@@ -2,6 +2,7 @@ import sqlite3
 import uuid
 from datetime import datetime
 from core.models import Client, Message
+from protocol.codes import Protocol
 
 class Database:
     def __init__(self, db_path):
@@ -11,20 +12,20 @@ class Database:
 
     def _init_db(self):
         cur = self.conn.cursor()
-        cur.execute("""
+        cur.execute(f"""
             CREATE TABLE IF NOT EXISTS clients (           
-                ID BLOB(16) PRIMARY KEY,
+                ID BLOB({Protocol.CLIENT_ID_LEN}) PRIMARY KEY,
                 UserName TEXT UNIQUE NOT NULL,
                 PublicKey BLOB NOT NULL,
                 LastSeen TEXT NOT NULL      
             )
         """)
         
-        cur.execute("""
+        cur.execute(f"""
             CREATE TABLE IF NOT EXISTS messages (
                     ID INTEGER PRIMARY KEY AUTOINCREMENT,
-                    ToClient BLOB(16) NOT NULL,
-                    FromClient BLOB(16) NOT NULL,
+                    ToClient BLOB({Protocol.CLIENT_ID_LEN}) NOT NULL,
+                    FromClient BLOB({Protocol.CLIENT_ID_LEN}) NOT NULL,
                     Type INTEGER NOT NULL,
                     Content BLOB NOT NULL
                 )
@@ -36,7 +37,7 @@ class Database:
     def add_client(self, username, pubkey):
         '''
         Adds a new client to the DB, and returns its 
-        client_id (16 bytes), or raises an exception if the username exists. 
+        client_id ({Protocol.CLIENT_ID_LEN} bytes), or raises an exception if the username exists. 
         '''
         client_id = uuid.uuid4().bytes
         cur = self.conn.cursor()
@@ -56,6 +57,12 @@ class Database:
         row = cur.fetchone()
         return self._parse_client(row) if row else None
     
+    def get_client_by_id(self, id):
+        cur = self.conn.cursor()
+        cur.execute("SELECT * FROM clients WHERE ID = ?", (id,))
+        row = cur.fetchone()
+        return self._parse_client(row) if row else None
+
     def get_all_clients(self):
         cur = self.conn.cursor()
         cur.execute("SELECT * FROM clients")
@@ -96,7 +103,6 @@ class Database:
         return messages
     
     # Helpers
-
     def _parse_client(self, row):
         return Client(
             id=row["ID"],

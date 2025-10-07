@@ -3,10 +3,12 @@ from core.db import Database
 from core.dispatcher import Dispatcher
 from network.tcp_server import TCPServer
 
+DB = "app.db"
+
 def main():
     cfg = Config()
 
-    db = Database("app.db")
+    db = Database(DB)
 
     dispatcher = Dispatcher(db, debug=cfg.debug)
     server = TCPServer(cfg.port, dispatcher)

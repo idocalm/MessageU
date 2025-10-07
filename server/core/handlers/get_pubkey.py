@@ -1,14 +1,14 @@
-from core.handlers.base import AbstractRequestHandler
-from protocol.codes import ResponseCode
+from core.handlers.base import RequestHandler
+from protocol.codes import ResponseCode, Protocol
 from protocol.framing import ResponseFrame
 
-class GetPubKeyHandler(AbstractRequestHandler):
+class GetPubKeyHandler(RequestHandler):
     def handle(self, request):
         payload = request.payload
-        if len(payload) != 16:
+        if len(payload) != Protocol.CLIENT_ID_LEN:
             return ResponseFrame(version=request.version, code=ResponseCode.ERROR, payload=b"Invalid payload size")
         
-        client_id = payload # 16 bytes client id
+        client_id = payload
         pubkey = self.db.get_pubkey(client_id)
 
         if not pubkey:

@@ -1,7 +1,7 @@
 from protocol.framing import RequestFrame
 from core.db import Database
 
-class AbstractRequestHandler:
+class RequestHandler:
     def __init__(self, db: Database):
         self.db = db
 

@@ -4,11 +4,12 @@ from core.handlers.list_clients import ListClientsHandler
 from core.handlers.get_pubkey import GetPubKeyHandler
 from core.handlers.send_message import SendMessageHandler
 from core.handlers.pull_messages import PullMessagesHandler
-from protocol.framing import ResponseFrame
+from protocol.framing import ResponseFrame, RequestFrame
+from core.db import Database
 from debugger import print_request_debug, print_response_debug
 
 class Dispatcher:
-    def __init__(self, db, debug=False):
+    def __init__(self, db: Database, debug=False):
         self.db = db
         self.debug = debug
         self.handlers = {
@@ -19,8 +20,15 @@ class Dispatcher:
             RequestCode.PULL_MESSAGES: PullMessagesHandler(db),
         }
 
-    def dispatch(self, request):
+    def is_client_registered(self, request: RequestFrame):
+        client_id = request.client_id 
+        return self.db.get_client_by_id(client_id) is not None
+
+    def dispatch(self, request: RequestFrame):
         
+        if request.code != RequestCode.REGISTER and not self.is_client_registered(request):
+            return ResponseFrame(version=request.version, code=ResponseCode.ERROR, payload=b"Unauthorized request")
+
         if self.debug:
             print_request_debug(request)
 

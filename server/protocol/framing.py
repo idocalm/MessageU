@@ -8,6 +8,7 @@ class RequestFrame:
     - 2 bytes for request code
     - 4 bytes for payload size
     '''
+    
     HEADER_FORMAT = "<16sBHI"
 
     def __init__(self, client_id, version, code, payload):
