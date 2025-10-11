@@ -43,7 +43,7 @@ void Menu::handle_choice(MenuOptions choice) {
                 client_.pull_messages(); 
                 break;
             case MenuOptions::SEND_TEXT_MESSAGE:
-                client_.send_mesage_to_client(); 
+                client_.send_message_to_client(); 
                 break;
             case MenuOptions::REQ_SYM_KEY:
                 client_.request_sym_key(); 

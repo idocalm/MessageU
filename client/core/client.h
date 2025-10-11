@@ -43,7 +43,7 @@ class Client {
         void list_clients();
         void get_pubkey();
         void pull_messages();
-        void send_mesage_to_client();
+        void send_message_to_client();
         void request_sym_key();
         void send_sym_key();
 

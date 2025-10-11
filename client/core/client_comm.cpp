@@ -22,12 +22,19 @@ bool Client::get_dest_user(std::array<uint8_t, Protocol::client_id_len>& id) {
         return false;
     }
 
+    
+
     // Check cache first
     for (const auto& [id_hex, oc] : other_clients_) {
         if (oc.username == username) {
             auto hex = id_hex;
             for (size_t i = 0; i < Protocol::client_id_len; i++) {
                 std::string byte_str = hex.substr(i * 2, 2);
+                // check that the hex is really hex
+                if (byte_str.size() != 2 || !std::all_of(byte_str.begin(), byte_str.end(), ::isxdigit)) {
+                    ERR("Invalid hex string");
+                    return false;
+                }
                 id[i] = static_cast<uint8_t>(std::stoul(byte_str, nullptr, 16));
             }
             return true;

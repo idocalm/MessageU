@@ -20,8 +20,13 @@ TCPClient::TCPClient() : socket_(io_context_) {
     if (pos == std::string::npos)
         throw std::runtime_error("Invalid format in " CLIENT_CONFIG " (expected IP:PORT)");
 
+    // validate port is in range
+    int port = std::stoi(line.substr(pos + 1));
+    if (port < MIN_PORT || port > MAX_PORT)
+        throw std::runtime_error("Invalid port in " CLIENT_CONFIG);
+
     host_ = line.substr(0, pos);
-    port_ = static_cast<uint16_t>(std::stoi(line.substr(pos + 1)));
+    port_ = static_cast<uint16_t>(port);
 }
 
 /**
