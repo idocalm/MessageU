@@ -14,11 +14,12 @@ all: $(TARGET)
 $(TARGET): $(OBJ)
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
-	@mkdir -p client1 client2
-	@cp $(TARGET) client1/
-	@cp $(TARGET) client2/
-	@cp server.info client1/ 
-	@cp server.info client2/
+	@mkdir -p tests
+	@mkdir -p tests/client1 tests/client2
+	@cp $(TARGET) tests/client1/
+	@cp $(TARGET) tests/client2/
+	@cp server.info tests/client1/ 
+	@cp server.info tests/client2/
 
 $(OBJDIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)

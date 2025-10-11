@@ -1,66 +1,85 @@
 #include "menu.h"
 
-Menu::Menu(Client& client) : client_(client) {
-    build_handlers();
-}
+Menu::Menu(Client& client) : client_(client) {}
 
+/**
+ * @brief Prints the menu with the different options for the user to select from 
+ * 
+ */
 void Menu::print_menu() {
     std::cout << Color::CYAN << "\nMessageU client at your service.\n" << Color::RESET;
-    std::cout << "110) Register\n"
-              << "120) Request for clients list\n"
-              << "130) Request for public key\n"
-              << "140) Request for waiting messages\n"
-              << "150) Send a text message\n"
-              << "151) Send a request for symmetric key\n"
-              << "152) Send your symmetric key\n"
-              << "0) Exit client\n" << std::endl;
+    // The codes for each request are stored inside the MenuOptions enum in codes.h so we print it dynamically
+
+    std::cout
+            << static_cast<int>(MenuOptions::REGISTER)      << ") Register\n"
+            << static_cast<int>(MenuOptions::LIST_CLIENTS)  << ") Request for clients list\n"
+            << static_cast<int>(MenuOptions::REQ_PUB_KEY)   << ") Request for public key\n"
+            << static_cast<int>(MenuOptions::PULL_MESSAGES) << ") Request for waiting messages\n"
+            << static_cast<int>(MenuOptions::SEND_TEXT_MSG) << ") Send a text message\n"
+            << static_cast<int>(MenuOptions::REQ_SYM_KEY)   << ") Send a request for symmetric key\n"
+            << static_cast<int>(MenuOptions::SEND_SYM_KEY)  << ") Send your symmetric key\n"
+            << static_cast<int>(MenuOptions::EXIT)          << ") Exit client\n"
+            << std::endl;
 }
 
-void Menu::build_handlers() {
-    handlers_ = {
-        {110, [this] {
-            client_.register_user();
-        }},
-        {120, [this] { client_.list_clients(); }},
-        {130, [this] { client_.get_pubkey(); }},
-        {140, [this] { client_.pull_messages(); }},
-        {150, [this] { client_.send_mesage_to_client(); }},
-        {151, [this] { client_.request_sym_key(); }},
-        {152, [this] { client_.send_sym_key(); }},
-        {0,   [this] {
-            std::cout << Color::YELLOW << "Goodbye!" << Color::RESET << std::endl;
-        }},
-    };
-}
-
-void Menu::handle_choice(int choice) {
-    const std::unordered_set<int> allowed = {0,110,120,130,140,150,151,152};
-    if (!allowed.count(choice)) {
-        std::cout << Color::RED << "Invalid choice" << Color::RESET << std::endl;
-        return;
-    }
-
+/**
+ * @brief Run the correct client function given the user selected choice, or report if its invalid
+ * 
+ * @param choice 
+ */
+void Menu::handle_choice(MenuOptions choice) {
     try {
-        if (auto it = handlers_.find(choice); it != handlers_.end()) {
-            it->second();
-        } else {
-            std::cout << Color::RED << "Invalid choice" << Color::RESET << std::endl;
+        switch (choice) {
+            case MenuOptions::REGISTER:
+                client_.register_user(); 
+                break;
+            case MenuOptions::LIST_CLIENTS:
+                client_.list_clients(); 
+                break;
+            case MenuOptions::REQ_PUB_KEY:
+                client_.get_pubkey(); 
+                break;
+            case MenuOptions::PULL_MESSAGES:
+                client_.pull_messages(); 
+                break;
+            case MenuOptions::SEND_TEXT_MESSAGE:
+                client_.send_mesage_to_client(); 
+                break;
+            case MenuOptions::REQ_SYM_KEY:
+                client_.request_sym_key(); 
+                break;
+            case MenuOptions::SEND_SYM_KEY:
+                client_.send_sym_key(); 
+                break;
+            case MenuOptions::EXIT:
+                break;
+            default: 
+                std::cout << Color::RED << "Invalid choice" << Color::RESET << std::endl;
+                break;
         }
-    } catch (const std::exception& e) {
-        std::cerr << Color::RED << "Error: " << e.what() << Color::RESET << std::endl;
+    } catch (std::exception& e) {
+        std::cout << Color::RED << "Error: " << e.what() << Color::RESET << std::endl;
     }
 }
 
-
+/**
+ * @brief Entry function for the Menu, 
+ * initalizes the menu and repeatedly takes a choice from the user
+ * This function is called from main.cpp. 
+ */
 void Menu::run() {
     int choice = -1;
+    std::string line;
+
     do {
         print_menu();
-        std::string line;
         if (!std::getline(std::cin, line)) break;
         if (line.empty()) continue;
+
+
         choice = std::stoi(line);
-        handle_choice(choice);
+        handle_choice(static_cast<MenuOptions>(choice));
         std::cout << std::endl;
-    } while (choice != 0);
+        
+    } while (choice != static_cast<int>(MenuOptions::EXIT));
 }

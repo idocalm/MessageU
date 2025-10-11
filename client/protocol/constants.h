@@ -66,5 +66,13 @@ inline std::string to_hex(const std::vector<uint8_t>& data) {
     return oss.str();
 }
 
+inline std::string id_to_hex(const std::array<uint8_t, Protocol::client_id_len>& id) {
+    std::ostringstream oss;
+    oss << std::hex << std::setfill('0');
+    for (auto b : id)
+        oss << std::setw(2) << static_cast<int>(b);
+    return oss.str();
+}
+
 
 #endif
