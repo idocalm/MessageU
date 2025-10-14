@@ -4,7 +4,7 @@
 #include <iostream>
 #include <string>
 
-#include "core/client.h"
+#include "client.h"
 
 class Menu {
     public:

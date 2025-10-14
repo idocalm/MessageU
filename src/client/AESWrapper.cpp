@@ -1,8 +1,8 @@
 #include "AESWrapper.h"
 
-#include <cryptopp/modes.h>
-#include <cryptopp/aes.h>
-#include <cryptopp/filters.h>
+#include <modes.h>
+#include <aes.h>
+#include <filters.h>
 
 #include <stdexcept>
 #include <immintrin.h>	// _rdrand32_step
@@ -17,14 +17,14 @@ unsigned char* AESWrapper::GenerateKey(unsigned char* buffer, unsigned int lengt
 
 AESWrapper::AESWrapper()
 {
-	GenerateKey(_key, DEFAULT_KEYLENGTH);
+	GenerateKey(_key, Protocol::symkey_length);
 }
 
 AESWrapper::AESWrapper(const unsigned char* key, unsigned int length)
 {
-	if (length != DEFAULT_KEYLENGTH)
+	if (length != Protocol::symkey_length)
 		throw std::length_error("key length must be 16 bytes");
-	CryptoPP::memcpy_s(_key, DEFAULT_KEYLENGTH, key, length);
+	memcpy_s(_key, Protocol::symkey_length, key, length);
 }
 
 AESWrapper::~AESWrapper()
@@ -40,7 +40,7 @@ std::string AESWrapper::encrypt(const char* plain, unsigned int length)
 {
 	CryptoPP::byte iv[CryptoPP::AES::BLOCKSIZE] = { 0 };	// for practical use iv should never be a fixed value!
 
-	CryptoPP::AES::Encryption aesEncryption(_key, DEFAULT_KEYLENGTH);
+	CryptoPP::AES::Encryption aesEncryption(_key, Protocol::symkey_length);
 	CryptoPP::CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, iv);
 
 	std::string cipher;
@@ -56,7 +56,7 @@ std::string AESWrapper::decrypt(const char* cipher, unsigned int length)
 {
 	CryptoPP::byte iv[CryptoPP::AES::BLOCKSIZE] = { 0 };	// for practical use iv should never be a fixed value!
 
-	CryptoPP::AES::Decryption aesDecryption(_key, DEFAULT_KEYLENGTH);
+	CryptoPP::AES::Decryption aesDecryption(_key, Protocol::symkey_length);
 	CryptoPP::CBC_Mode_ExternalCipher::Decryption cbcDecryption(aesDecryption, iv);
 
 	std::string decrypted;

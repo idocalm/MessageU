@@ -20,7 +20,6 @@ enum class ResponseCode : uint16_t {
     GET_PUBKEY = 2102,
     SEND_OK = 2103,
     PULL_MESSAGES = 2104,
-    ERROR = 2500
 };
 
 // There are a few types of messages, first 2 are for symmetric key exchange between clients, 

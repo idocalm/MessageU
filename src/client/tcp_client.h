@@ -2,13 +2,14 @@
 #define TCP_CLIENT_H
 
 #include <boost/asio.hpp>
-#include <protocol/constants.h>
+#include "constants.h"
 #include <vector>
 #include <string>
 #include <fstream>
 
 #define MIN_PORT 1
 #define MAX_PORT 65535
+
 
 /**
  * @brief A tcp client using boost to send and receive data from the server, used by the Client

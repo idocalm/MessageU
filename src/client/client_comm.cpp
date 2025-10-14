@@ -25,17 +25,7 @@ bool Client::get_dest_user(std::array<uint8_t, Protocol::client_id_len>& id) {
     // Check cache first
     for (const auto& [id_hex, oc] : other_clients_) {
         if (oc.username == username) {
-            auto hex = id_hex;
-            for (size_t i = 0; i < Protocol::client_id_len; i++) {
-                std::string byte_str = hex.substr(i * 2, 2);
-                // check that the hex is really hex
-                if (byte_str.size() != 2 || !std::all_of(byte_str.begin(), byte_str.end(), ::isxdigit)) {
-                    ERR("Invalid hex string");
-                    return false;
-                }
-                id[i] = static_cast<uint8_t>(std::stoul(byte_str, nullptr, 16));
-            }
-            return true;
+            return hex_to_id(id_hex, id); 
         }
     }
 
@@ -48,11 +38,7 @@ bool Client::get_dest_user(std::array<uint8_t, Protocol::client_id_len>& id) {
         return false;
     }
 
-    for (size_t i = 0; i < Protocol::client_id_len; i++) {
-        std::string byte_str = id_hex.substr(i * 2, 2);
-        id[i] = static_cast<uint8_t>(std::stoul(byte_str, nullptr, 16));
-    }
-    return true;
+    return hex_to_id(id_hex, id); 
 }
 
 /**
@@ -75,7 +61,7 @@ bool Client::send_message(const std::array<uint8_t, Protocol::client_id_len>& to
     MessagePayload msg;
     msg.dest_id = to_id;
     msg.type = static_cast<uint8_t>(type);
-    msg.content_size = content.size();
+    msg.content_size = static_cast<uint32_t>(content.size());
     msg.content = content;
 
     RequestFrame req;
@@ -115,31 +101,34 @@ void Client::list_clients() {
         return;
     }
 
-    const size_t rec_size = Protocol::client_id_len + Protocol::max_username_len;
-    if (resp.payload.size() % rec_size != 0) {
+    const int size = Protocol::client_id_len + Protocol::max_username_len;
+    if (resp.payload.size() % size != 0) {
         ERR("Invalid LIST_CLIENTS payload size");
         return;
     }
 
     // print all the users
-    size_t num_clients = resp.payload.size() / rec_size;
-    INFO(num_clients << " clients registered:");
-    for (size_t i = 0; i < num_clients; i++) {
-        size_t off = i * rec_size;
-        std::array<uint8_t, Protocol::client_id_len> cid{};
-        memcpy(cid.data(), &resp.payload[off], Protocol::client_id_len);
+    size_t num_clients = resp.payload.size() / size;
 
-        char uname[Protocol::max_username_len + 1] = {0};
-        memcpy(uname, &resp.payload[off + Protocol::client_id_len], Protocol::max_username_len);
-        uname[Protocol::max_username_len] = '\0'; // add a null terminator
+    INFO(num_clients << " clients registered:");
+    for (int i = 0; i < num_clients; i++) {
+        int offset = i * size;
+
+        std::array<uint8_t, Protocol::client_id_len> id{};
+        memcpy(id.data(), &resp.payload[offset], Protocol::client_id_len);
+
+        char username[Protocol::max_username_len + 1] = {0};
+        memcpy(username, &resp.payload[offset + Protocol::client_id_len], Protocol::max_username_len);
+        username[Protocol::max_username_len] = '\0'; // add a null terminator
         
-        std::string id_hex = id_to_hex(cid);
-        std::cout << "    ID: " << id_hex << " | Username: " << uname << std::endl;
+        std::string id_hex = to_hex(id);
+        std::cout << "    ID: " << id_hex << " | Username: " << username << std::endl;
         
         // Save to the cache
         auto& entry = other_clients_[id_hex];
-        entry.username = uname;
+        entry.username = username;
     }
+
     std::cout << std::endl;
 }
 
@@ -166,37 +155,39 @@ void Client::pull_messages() {
     }
 
     const auto& data = resp.payload;
-    size_t off = 0;
+    int offset = 0;
     if (data.empty()) {
         INFO("No messages found.");
         return;
     }
 
-    while (off + Protocol::client_id_len + 1 + 4 <= data.size()) {
+    // TODO
+    int overhead = Protocol::client_id_len + Protocol::message_type_len + Protocol::message_id_len;
+    while (offset + overhead <= data.size()) {
         std::array<uint8_t, Protocol::client_id_len> from{};
-        memcpy(from.data(), &data[off], Protocol::client_id_len);
-        off += Protocol::client_id_len;
+        memcpy(from.data(), &data[offset], Protocol::client_id_len);
+        offset += Protocol::client_id_len;
 
-        uint8_t type = data[off++];
-        uint32_t size = read_le32(&data[off]);
-        off += 4;
+        uint8_t type = data[offset++];
+        uint32_t size = read_le32(&data[offset]);
+        offset += 4;
 
-        if (size > data.size() - off) {
+        if (size > data.size() - offset) {
             ERR("Malformed message payload.");
             break;
         }
 
-        std::vector<uint8_t> content(data.begin() + off, data.begin() + off + size);
-        off += size;
+        std::vector<uint8_t> content(data.begin() + offset, data.begin() + offset + size);
+        offset += size;
 
-        std::string from_hex = id_to_hex(from);
-        auto it = other_clients_.find(from_hex);
+        std::string from_hex = to_hex(from);
+        auto entry = other_clients_.find(from_hex);
 
         std::string sender = from_hex;
-        if (it != other_clients_.end() && !it->second.username.empty())
-            sender = it->second.username;
+        if (entry != other_clients_.end() && !entry->second.username.empty())
+            sender = entry->second.username;
 
-        std::cout << Color::CYAN << "From: " << sender << Color::RESET << std::endl;
+        TITLE("From: " << sender); 
 
         if (type == static_cast<uint8_t>(MessageType::SYM_REQ)) {
             std::cout << "Content: Request for symmetric key" << std::endl;
@@ -205,18 +196,19 @@ void Client::pull_messages() {
             std::cout << "Content: Symmetric key received" << std::endl;
             handle_incoming_sym_key(from, content);
         } else if (type == static_cast<uint8_t>(MessageType::TEXT)) {
-            if (it == other_clients_.end() || it->second.symkey.empty()) {
+            if (entry == other_clients_.end() || zeroed(entry->second.symkey)) {
                 ERR("Unknown user or no symmetric key established.");
                 continue;
             }
             // for normal message try to decrypt and show content 
-            std::string text = decrypt_message(std::string(content.begin(), content.end()), it->second.symkey);
+            std::string text = decrypt_message(std::string(content.begin(), content.end()), entry->second.symkey);
             std::cout << "Content: " << text << std::endl;
         } else if (type == static_cast<uint8_t>(MessageType::FILE)) {
             // TODO: handle file
         } else {
             ERR("Unknown message type: " << type);
         }
+
         std::cout << "----<EOM>----\n\n";
     }
 }
@@ -227,20 +219,19 @@ void Client::pull_messages() {
  * Checks if we exchanged a sym key with the user
  * 
  */
-void Client::send_mesage_to_client() {
+void Client::send_message_to_client() {
     std::array<uint8_t, Protocol::client_id_len> dest{};
     if (!get_dest_user(dest))
         return;
 
-    const std::string dest_hex = id_to_hex(dest);
-    auto it = other_clients_.find(dest_hex);
-    if (it == other_clients_.end()) {
+    const std::string dest_hex = to_hex(dest);
+    auto entry = other_clients_.find(dest_hex);
+    if (entry == other_clients_.end()) {
         ERR("Unknown dest user. Run LIST_CLIENTS first.");
         return;
     }
 
-    // 
-    if (it->second.symkey.empty()) {
+    if (zeroed(entry->second.symkey)) {
         ERR("No symmetric key established with this user. You first need to exchange.");
         return;
     }
@@ -254,10 +245,10 @@ void Client::send_mesage_to_client() {
     }
 
     // Encrypt the message with the sym key 
-    AESWrapper aes(reinterpret_cast<const unsigned char*>(it->second.symkey.data()), AESWrapper::DEFAULT_KEYLENGTH);
+    AESWrapper aes(reinterpret_cast<const unsigned char*>(entry->second.symkey.data()), Protocol::symkey_length);
     std::string encrypted;
     try {
-        encrypted = aes.encrypt(message.c_str(), message.size());
+        encrypted = aes.encrypt(message.c_str(), static_cast<uint32_t>(message.size()));
     } catch (const std::exception& e) {
         ERR("AES encryption failed: " << e.what());
         return;
@@ -266,7 +257,7 @@ void Client::send_mesage_to_client() {
     // Payload is just the encrypted message, and send
     std::vector<uint8_t> payload(encrypted.begin(), encrypted.end());
     if (send_message(dest, MessageType::TEXT, payload))
-        OK("Encrypted message sent to " << (it->second.username.empty() ? dest_hex : it->second.username));
+        OK("Encrypted message sent to " << (entry->second.username.empty() ? dest_hex : entry->second.username));
     else
         ERR("Failed to send message.");
 }
@@ -310,6 +301,6 @@ void Client::get_pubkey() {
     // Save to other_clients_
     const std::string id = to_hex(resp_client_id);
     OtherClient& entry = other_clients_[id];
-    entry.pubkey.assign(reinterpret_cast<const char*>(pubkey.data()), pubkey.size());
+    std::copy_n(pubkey.begin(), std::min(pubkey.size(), static_cast<size_t>(Protocol::max_pubkey_len)), entry.pubkey.begin());
     OK("Public key for " << (entry.username.empty() ? id : entry.username) << " stored successfully.");
 }

@@ -3,34 +3,18 @@
 
 #include <string>
 #include <iostream>
-#include <algorithm>
-#include <iomanip>
 #include <vector>
 #include <unordered_map>
+#include <array>
 
-#include "network/tcp_client.h"
-#include "crypto/Base64Wrapper.h"
-#include "crypto/RSAWrapper.h"
-#include "crypto/AESWrapper.h"
+#include "tcp_client.h"
+#include "Base64Wrapper.h"
+#include "RSAWrapper.h"
+#include "AESWrapper.h"
 
-#include "protocol/codes.h"
-#include "protocol/framing.h"
-#include "protocol/constants.h"
-
-// Logging macros 
-#define OK(msg)  std::cout << Color::GREEN  << "[+] " << msg << Color::RESET << std::endl
-#define ERR(msg) std::cerr << Color::RED    << "[-] " << msg << Color::RESET << std::endl
-#define INFO(msg) std::cout << Color::YELLOW << "[*] " << msg << Color::RESET << std::endl
-
-// This lets us print to console in different colors
-namespace Color {
-    inline const std::string RESET   = "\033[0m";
-    inline const std::string RED     = "\033[31m";
-    inline const std::string GREEN   = "\033[32m";
-    inline const std::string YELLOW  = "\033[33m";
-    inline const std::string BLUE    = "\033[34m";
-    inline const std::string CYAN    = "\033[36m";
-}
+#include "codes.h"
+#include "framing.h"
+#include "constants.h"
 
 /**
  * @brief Main object that handles registeration, messages or other operations
@@ -52,8 +36,8 @@ class Client {
         
         std::array<uint8_t, Protocol::client_id_len> id_{}; // The clients ID
         std::string username_;
-        std::string pubkey_;
-        std::string privkey_;
+        std::array<uint8_t, Protocol::max_pubkey_len> pubkey_{};
+        std::vector<uint8_t> privkey_;
         uint8_t version_;
 
         /*
@@ -63,16 +47,16 @@ class Client {
         
         struct OtherClient {
             std::string username;
-            std::string pubkey;
-            std::vector<uint8_t> symkey;
+            std::array<uint8_t, Protocol::max_pubkey_len> pubkey{};
+            std::array<uint8_t, Protocol::symkey_length> symkey{};
         };
         std::unordered_map<std::string, OtherClient> other_clients_;
 
 
-        std::vector<uint8_t> build_register_payload(const std::string& username, const std::string& pubkey);
+        std::vector<uint8_t> build_register_payload(const std::string& username, const std::array<uint8_t, Protocol::max_pubkey_len>& pubkey);
         bool send_message(const std::array<uint8_t, Protocol::client_id_len>& to_id, MessageType type, const std::vector<uint8_t>& content);
         bool get_dest_user(std::array<uint8_t, Protocol::client_id_len>& id);
-        std::string decrypt_message(const std::string& content, const std::vector<uint8_t>& symkey);
+        std::string decrypt_message(const std::string& content, const std::array<uint8_t, Protocol::symkey_length>& symkey);
         void handle_incoming_sym_key(const std::array<uint8_t, Protocol::client_id_len>& from_id, const std::vector<uint8_t>& encrypted);
         void save_client_file();
     };

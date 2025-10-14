@@ -5,7 +5,6 @@ from protocol.framing import ResponseFrame
 class ListClientsHandler(RequestHandler):
     def handle(self, request):
         clients = self.db.get_all_clients()
-        print(clients)
 
         payload_parts = []
         for client in clients: 

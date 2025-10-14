@@ -1,3 +1,4 @@
+import struct
 from protocol.framing import RequestFrame, ResponseFrame
 from core.dispatcher import Dispatcher
 from protocol.codes import Protocol

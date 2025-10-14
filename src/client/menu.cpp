@@ -7,7 +7,7 @@ Menu::Menu(Client& client) : client_(client) {}
  * 
  */
 void Menu::print_menu() {
-    std::cout << Color::CYAN << "\nMessageU client at your service.\n" << Color::RESET;
+    ERR("MessageU client at your service.\n");
     // The codes for each request are stored inside the MenuOptions enum in codes.h so we print it dynamically
 
     std::cout
@@ -15,7 +15,7 @@ void Menu::print_menu() {
             << static_cast<int>(MenuOptions::LIST_CLIENTS)  << ") Request for clients list\n"
             << static_cast<int>(MenuOptions::REQ_PUB_KEY)   << ") Request for public key\n"
             << static_cast<int>(MenuOptions::PULL_MESSAGES) << ") Request for waiting messages\n"
-            << static_cast<int>(MenuOptions::SEND_TEXT_MSG) << ") Send a text message\n"
+            << static_cast<int>(MenuOptions::SEND_TEXT_MESSAGE) << ") Send a text message\n"
             << static_cast<int>(MenuOptions::REQ_SYM_KEY)   << ") Send a request for symmetric key\n"
             << static_cast<int>(MenuOptions::SEND_SYM_KEY)  << ") Send your symmetric key\n"
             << static_cast<int>(MenuOptions::EXIT)          << ") Exit client\n"
@@ -54,11 +54,11 @@ void Menu::handle_choice(MenuOptions choice) {
             case MenuOptions::EXIT:
                 break;
             default: 
-                std::cout << Color::RED << "Invalid choice" << Color::RESET << std::endl;
+                ERR("Invalid choice");
                 break;
         }
     } catch (std::exception& e) {
-        std::cout << Color::RED << "Error: " << e.what() << Color::RESET << std::endl;
+       ERR("Error: " << e.what());
     }
 }
 

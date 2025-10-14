@@ -22,17 +22,16 @@ Client::Client() : tcp_() {
     std::getline(f, id_hex);
 
     // parse ID from hex if valid
-    if (id_hex.size() == Protocol::client_id_len * 2) {
-        auto bytes = hex_to_bytes(id_hex);
-        std::copy_n(bytes.begin(), Protocol::client_id_len, id_.begin());
-    } else {
+    if (!hex_to_id(id_hex, id_)) {
         id_.fill(0);
     }
     
-    // read private key which is in base64 and needs decoding
+    // read private key which is in base64 and decod e
     std::string privkey_data((std::istreambuf_iterator<char>(f)), {});
-    if (!privkey_data.empty())
-        privkey_ = Base64Wrapper::decode(privkey_data);
+    if (!privkey_data.empty()) {
+        std::string decoded = Base64Wrapper::decode(privkey_data);
+        privkey_.assign(decoded.begin(), decoded.end());
+    }
 
     if (!username_.empty() && !privkey_.empty()) {
         OK("Welcome, " << username_ << "! Loaded existing client.");
@@ -61,7 +60,7 @@ void Client::save_client_file() {
 
     f << username_ << "\n";
     f << to_hex(std::vector<uint8_t>(id_.begin(), id_.end())) << "\n";
-    f << Base64Wrapper::encode(privkey_) << "\n";
+    f << Base64Wrapper::encode(std::string(privkey_.begin(), privkey_.end())) << "\n";
     INFO("Client data saved to " << CLIENT_FILE);
 }
 
@@ -73,13 +72,10 @@ void Client::save_client_file() {
  * @return std::vector<uint8_t> - serialized register payload
  * @throws std::runtime_error if public key length is bad
  */
-std::vector<uint8_t> Client::build_register_payload(const std::string& username, const std::string& pubkey) {
+std::vector<uint8_t> Client::build_register_payload(const std::string& username, const std::array<uint8_t, Protocol::max_pubkey_len>& pubkey) {
     std::vector<uint8_t> payload(Protocol::max_username_len + Protocol::max_pubkey_len, 0);
     size_t name_len = std::min(username.size(), static_cast<size_t>(Protocol::max_username_len - 1));
     memcpy(payload.data(), username.data(), name_len);
-
-    if (pubkey.size() != Protocol::max_pubkey_len)
-        throw std::runtime_error("Public key must be exactly 160 bytes");
 
     memcpy(payload.data() + Protocol::max_username_len, pubkey.data(), Protocol::max_pubkey_len);
     return payload;
@@ -87,7 +83,7 @@ std::vector<uint8_t> Client::build_register_payload(const std::string& username,
 
 /**
  * @brief Main entry for register a new user
- * Prompts user for userrname, generates RSA pubkey & privkey pair
+ * Prompts user for userrname, generates pub key & privkey pair
  * Builds a RequestFrame with build_register_payload and sends it. 
  * Saves client details if success with save_client_file
  * 
@@ -107,8 +103,16 @@ void Client::register_user() {
 
     // generate new RSA keypair
     RSAPrivateWrapper priv;
-    privkey_ = priv.getPrivateKey();
-    pubkey_ = priv.getPublicKey();
+    std::string privkey_str = priv.getPrivateKey();
+    privkey_.assign(privkey_str.begin(), privkey_str.end());
+    
+    std::string pubkey_str = priv.getPublicKey();
+    if (pubkey_str.size() != Protocol::max_pubkey_len) {
+        ERR("Generated public key has wrong size");
+        return;
+    }
+
+    std::copy_n(pubkey_str.begin(), Protocol::max_pubkey_len, pubkey_.begin());
 
     RequestFrame req;
     req.client_id.fill(0);
@@ -118,7 +122,6 @@ void Client::register_user() {
 
     tcp_.send(req.to_bytes());
     auto resp = ResponseFrame::from_bytes(tcp_.receive());
-    
     
     // receive server response
     if (resp.code != (uint16_t) ResponseCode::REGISTER_OK) {

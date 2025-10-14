@@ -15,8 +15,8 @@ class Database:
         cur.execute(f"""
             CREATE TABLE IF NOT EXISTS clients (           
                 ID BLOB({Protocol.CLIENT_ID_LEN}) PRIMARY KEY,
-                UserName TEXT UNIQUE NOT NULL,
-                PublicKey BLOB NOT NULL,
+                UserName TEXT(255) UNIQUE NOT NULL,
+                PublicKey BLOB({Protocol.MAX_PUBKEY_LEN}) NOT NULL,
                 LastSeen TEXT NOT NULL      
             )
         """)

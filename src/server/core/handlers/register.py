@@ -7,7 +7,6 @@ class RegisterHandler(RequestHandler):
     def handle(self, request):
         payload = request.payload
 
-        # Payload contains 
         if len(payload) < Protocol.MAX_USERNAME_LEN + Protocol.MAX_PUBKEY_LEN:
             return ResponseFrame(version=request.version, code=ResponseCode.ERROR, payload=b"Invalid payload size")
         

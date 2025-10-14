@@ -1,7 +1,7 @@
 #ifndef FRAMING_H
 #define FRAMING_H
 
-#include "protocol/constants.h"
+#include "constants.h"
 #include <cstdint>
 #include <vector>
 #include <string>
