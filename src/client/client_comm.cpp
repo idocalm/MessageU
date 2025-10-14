@@ -161,7 +161,6 @@ void Client::pull_messages() {
         return;
     }
 
-    // TODO
     int overhead = Protocol::client_id_len + Protocol::message_type_len + Protocol::message_id_len;
     while (offset + overhead <= data.size()) {
         std::array<uint8_t, Protocol::client_id_len> from{};
