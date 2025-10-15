@@ -9,6 +9,7 @@ class RequestFrame:
     - 4 bytes for payload size
     '''
     
+    # The header format is little endian
     HEADER_FORMAT = "<16sBHI"
 
     def __init__(self, client_id, version, code, payload):
@@ -41,6 +42,7 @@ class ResponseFrame:
     - 4 bytes for payload size
     '''
 
+    # Header format is again little endian
     HEADER_FORMAT = "<BHI"
 
     def __init__(self, version, code, payload=b""):

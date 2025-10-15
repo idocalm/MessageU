@@ -3,9 +3,13 @@ from protocol.codes import ResponseCode, Protocol
 from protocol.framing import ResponseFrame
 
 class ListClientsHandler(RequestHandler):
+    """
+    A request handler designed to handle the request type: List all clients available, except the calling one
+    """
     def handle(self, request):
         clients = self.db.get_all_clients()
 
+        # create a payload by concating all the information about users one after another
         payload_parts = []
         for client in clients: 
             if client.id == request.client_id:

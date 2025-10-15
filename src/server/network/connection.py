@@ -1,8 +1,15 @@
 import struct
-from protocol.framing import RequestFrame, ResponseFrame
+from protocol.framing import RequestFrame
 from core.dispatcher import Dispatcher
 from protocol.codes import Protocol
+
 class Connection:
+    """ 
+    The connection class lives inside any socket between a client and the server 
+    it constantly handles the loop of receiving a packet -> decoding it -> moving it for dispatcher to take care ->
+    receving a response from the dispatcher -> sending it 
+    
+    """
     def __init__(self, sock, dispatcher: Dispatcher):
         self.sock = sock
         self.dispatcher = dispatcher
@@ -10,6 +17,8 @@ class Connection:
     def handle(self):
         try: 
             while True:
+                # start reading and parsing packets
+
                 header = self.sock.recv(Protocol.HEADER_LEN)
                 if not header:
                     break
@@ -21,12 +30,13 @@ class Connection:
                 client_id, version, code, payload_size = struct.unpack(RequestFrame.HEADER_FORMAT, header[:header_size])
                 if not isinstance(payload_size, int) or payload_size < 0:
                     raise ValueError("Payload size is negative")
-                    break
+
 
                 payload = self.sock.recv(payload_size)
                 full = header + payload
 
                 req = RequestFrame.from_bytes(full)
+                # pass handling to dispatcher, and receive a ResponseFrame once the handling is complete
                 resp = self.dispatcher.dispatch(req)
                 self.sock.sendall(resp.to_bytes())
             

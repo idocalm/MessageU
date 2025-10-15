@@ -3,6 +3,9 @@ from protocol.codes import ResponseCode, Protocol
 from protocol.framing import ResponseFrame
 
 class GetPubKeyHandler(RequestHandler):
+    """
+    A request handler designed to handle the request type: Get another user public key.
+    """
     def handle(self, request):
         payload = request.payload
         if len(payload) != Protocol.CLIENT_ID_LEN:

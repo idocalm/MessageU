@@ -1,6 +1,11 @@
 from enum import IntEnum
 
 class RequestCode(IntEnum):
+    """
+    RequestCodes are used to parse packets ariving from clients
+    Each RequestCode hold a different kind of request arriving from a client
+    """
+
     REGISTER = 600 # New client wants to register
     LIST_CLIENTS = 601 # Client wants to see other clients
     GET_PUBKEY = 602 # A client wants to get another clients public key from db
@@ -8,6 +13,11 @@ class RequestCode(IntEnum):
     PULL_MESSAGES = 604 # A client wants to see his pending messages 
 
 class ResponseCode(IntEnum):
+    """
+    ResponseCode are used to parse packets ariving from clients
+    Each RequestCode hold a different kind of request arriving from a client
+    """
+
     REGISTER_OK = 2100 # Registered the client 
     LIST_CLIENTS = 2101 # Sent the clients list successfully
     GET_PUBKEY = 2102 # Sent the pubkey successfully
@@ -16,6 +26,11 @@ class ResponseCode(IntEnum):
     ERROR = 9000 # General error
 
 class MessageType(IntEnum):
+    """
+    MessageTypes are used in RequestCode.SEND_MESSAGE. When a client sends a message request it could be either 
+    one of these types.
+    """
+
     SYM_REQ = 1 # Symmetric key request
     SYM_KEY = 2 # Symmetric key for client - encrypted with public key
     TEXT = 3 # A text message (encrypted peer-to-peer)
@@ -23,10 +38,14 @@ class MessageType(IntEnum):
 
 
 class Protocol(IntEnum):
+    """
+    The Protocol enum defines constants to avoid the use of magic number across the code. It's mostly lengths of fields that arrive in packets
+    """
+
     CLIENT_ID_LEN = 16
     TYPE_LEN = 1
     MAX_MESSAGE_CONTENT_SIZE = 4 # max 4 bytes for message content size
-    
+
     MAX_USERNAME_LEN = 255
     MAX_PUBKEY_LEN = 160
 

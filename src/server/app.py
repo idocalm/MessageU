@@ -6,6 +6,7 @@ from network.tcp_server import TCPServer
 DB = "defensive.db"
 
 def main():
+    """ Main project function: creates db, stars server """
     cfg = Config()
 
     db = Database(DB)
@@ -13,8 +14,6 @@ def main():
     dispatcher = Dispatcher(db, debug=cfg.debug)
     server = TCPServer(cfg.port, dispatcher)
     server.start()
-    
-    print(f"[+] Server v{cfg.version} listening on port {cfg.port}, debug={cfg.debug}")
 
 if __name__ == "__main__":
     main()

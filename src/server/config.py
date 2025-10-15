@@ -8,6 +8,11 @@ PORT_RANGE = (1, 65535)
 
 class Config: 
     def __init__(self):
+        """
+        the config holds values for other classes to use like port which is read from myport.info (or fallback)
+        whether or not the app runs in debug mode (see README.md for details on debug mode)
+        and the server version, which is 2 since we have sql db as a bonus
+        """
         self.port = FALLBACK_PORT
         self.version = 2
         self.debug = DEBUG
@@ -16,6 +21,7 @@ class Config:
             try:
                 with open(PORT_INFO_FILE, "r") as f:
                     port = int(f.read().strip())
+                    # check port is between the valid range
                     if PORT_RANGE[0] <= port <= PORT_RANGE[1]:
                         self.port = port
                     else:
