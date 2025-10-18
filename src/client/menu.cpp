@@ -18,6 +18,7 @@ void Menu::print_menu() {
             << static_cast<int>(MenuOptions::SEND_TEXT_MESSAGE) << ") Send a text message\n"
             << static_cast<int>(MenuOptions::REQ_SYM_KEY)   << ") Send a request for symmetric key\n"
             << static_cast<int>(MenuOptions::SEND_SYM_KEY)  << ") Send your symmetric key\n"
+            << static_cast<int>(MenuOptions::SEND_FILE_MESSAGE)  << ") Send a file\n"
             << static_cast<int>(MenuOptions::EXIT)          << ") Exit client\n"
             << std::endl;
 }
@@ -51,6 +52,8 @@ void Menu::handle_choice(MenuOptions choice) {
             case MenuOptions::SEND_SYM_KEY:
                 client_.send_sym_key(); 
                 break;
+            case MenuOptions::SEND_FILE_MESSAGE:
+                client_.send_file_message();
             case MenuOptions::EXIT:
                 break;
             default: 

@@ -3,13 +3,12 @@ from core.db import Database
 from core.dispatcher import Dispatcher
 from network.tcp_server import TCPServer
 
-DB = "defensive.db"
 
 def main():
     """ Main project function: creates db, stars server """
     cfg = Config()
 
-    db = Database(DB)
+    db = Database()
 
     dispatcher = Dispatcher(db, debug=cfg.debug)
     server = TCPServer(cfg.port, dispatcher)

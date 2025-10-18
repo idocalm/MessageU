@@ -6,6 +6,7 @@
 #include <vector>
 #include <unordered_map>
 #include <array>
+#include <filesystem>
 
 #include "tcp_client.h"
 #include "Base64Wrapper.h"
@@ -28,6 +29,7 @@ class Client {
         void get_pubkey();
         void pull_messages();
         void send_message_to_client();
+        void send_file_message();
         void request_sym_key();
         void send_sym_key();
 

@@ -71,12 +71,6 @@ The handlers we support are:
 
 Each handler hides his own logic inside the handle function. they might interact with the database, do their own checks, etc, as long as they end up returning a ResponseFrame
 
-### TESTING
-
-While developing the server I made some python tests for the server, they are inside
-
-tests/
-
 ### RUNNING THE SERVER
 
 to run: python app.py (maybe you need python3 app.py in your system)

@@ -203,13 +203,97 @@ void Client::pull_messages() {
             std::string text = decrypt_message(std::string(content.begin(), content.end()), entry->second.symkey);
             std::cout << "Content: " << text << std::endl;
         } else if (type == static_cast<uint8_t>(MessageType::FILE)) {
-            // TODO: handle file
+            if (entry == other_clients_.end() || zeroed(entry->second.symkey)) {
+                ERR("Unknown user or no symmetric key established.");
+                continue;
+            }
+
+            // decrypt the file
+            try {
+                std::string decrypted = decrypt_message(std::string(content.begin(), content.end()), entry->second.symkey);
+                // the temp file will be stored at %TMP%/file_<username>_<timestamp>
+                std::string tmp_dir = std::filesystem::temp_directory_path().string();
+                std::ostringstream path;
+                path << tmp_dir << "\\file_"
+                    << (entry->second.username.empty() ? from_hex : entry->second.username)
+                    << "_" << std::time(nullptr);
+                const std::string file_path = path.str();
+                std::ofstream out(file_path, std::ios::binary);
+                if (!out) {
+                    ERR("Failed to open file for writing: " << file_path);
+                    return;
+                }
+
+                out.write(decrypted.data(), decrypted.size());
+                out.close();
+
+                OK("File message saved to " << file_path);
+            } catch (const std::exception& e) {
+                ERR("Failed to decrypt file message: " << e.what());
+            }
         } else {
             ERR("Unknown message type: " << type);
         }
 
         std::cout << "----<EOM>----\n\n";
     }
+}
+
+/**
+ * @brief Sends a file message to another client (BONUS!)
+ */
+void Client::send_file_message() {
+    std::array<uint8_t, Protocol::client_id_len> dest{};
+    if (!get_dest_user(dest))
+        return;
+    
+    const std::string dest_hex = to_hex(dest);
+    auto entry = other_clients_.find(dest_hex);
+    if (entry == other_clients_.end()) {
+        ERR("Unknown dest user. Run LIST_CLIENTS first.");
+        return;
+    }
+
+    // check that there is a symmetric key (we send the file encrypted)
+    if (zeroed(entry->second.symkey)) {
+        ERR("No symmetric key established with this user. You first need to exchange.");
+        return;
+    }
+
+    // get full path
+    std::cout << "Enter full file path: ";
+    std::string path;
+    std::getline(std::cin, path);
+    if (path.empty()) {
+        ERR("File path cannot be empty.");
+        return;
+    }
+
+    // check the file exists
+    std::ifstream file(path, std::ios::binary);
+    if (!file) {
+        ERR("Failed to open file: " << path);
+        return;
+    }
+
+    std::vector<uint8_t> file_data((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    file.close();
+
+    // encrypt file
+    std::string encrypted;
+    try {
+        AESWrapper aes(reinterpret_cast<const unsigned char*>(entry->second.symkey.data()), Protocol::symkey_length);
+        encrypted = aes.encrypt(reinterpret_cast<const char*>(file_data.data()), static_cast<uint32_t>(file_data.size()));
+    } catch (const std::exception& e) {
+        ERR("AES encryption failed: " << e.what());
+        return;
+    }
+
+    std::vector<uint8_t> payload(encrypted.begin(), encrypted.end());
+    if (send_message(dest, MessageType::FILE, payload))
+        OK("Encrypted file message sent to " << (entry->second.username.empty() ? dest_hex : entry->second.username));
+    else
+        ERR("Failed to send file message.");
 }
 
 /**

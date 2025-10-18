@@ -16,8 +16,8 @@ class ListClientsHandler(RequestHandler):
                 # Skip the requesting client in the list
                 continue
 
-            # TODO: Maybe this is incorrect
             name_bytes = client.username.encode('ascii', errors='ignore')
+            # pad the username with null bytes to match the payload username length size
             name_field = name_bytes + b'\x00' * (Protocol.MAX_USERNAME_LEN - len(name_bytes))
             payload_parts.append(client.id + name_field)
 

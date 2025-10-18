@@ -1,10 +1,13 @@
 # MessageU Client:
 
 ### IDO CALMAN, T.Z. 331771535, 2025C
-
 ### VERSION 2: THIS CLIENT INCLUDES THE FILE SEND BONUS
-
 ## PLEASE MAKE SURE TO USE ISO C++17 STANDARD OR ABOVE
+
+Requirements:
+- C++17
+- cryptopp 
+- boost
 
 File structure:
 

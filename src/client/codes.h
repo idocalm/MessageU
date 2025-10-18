@@ -41,6 +41,7 @@ enum class MenuOptions: int {
     SEND_TEXT_MESSAGE = 150,
     REQ_SYM_KEY = 151, 
     SEND_SYM_KEY = 152,
+    SEND_FILE_MESSAGE = 153,
     EXIT = 0
 };
 

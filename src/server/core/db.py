@@ -4,14 +4,16 @@ from datetime import datetime
 from core.models import Client, Message
 from protocol.codes import Protocol
 
+DB = "defensive.db"
+
 class Database:
     """ 
     The database class handles all operations with defensive.db
     This includes reading and writing to db, parsing data from db as Client or Message
     """
-    def __init__(self, db_path):
+    def __init__(self, ):
         """ Calls on server init, creates the db file if doesn't exist """
-        self.conn = sqlite3.connect(db_path, check_same_thread=False)
+        self.conn = sqlite3.connect(DB, check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
         self._init_db()
 
@@ -109,7 +111,7 @@ class Database:
         cur.execute("SELECT * FROM messages WHERE ToClient = ?", (client_id,))
         rows = cur.fetchall()
         messages = [self._parse_message(row) for row in rows]
-        
+                
         # Delete the messages after pulling
         cur.execute("DELETE FROM messages WHERE ToClient = ?", (client_id,))
         self.conn.commit()
